@@ -1,4 +1,4 @@
-package xyz.celinski.home_budget.controllers;
+package xyz.celinski.home_budget.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
