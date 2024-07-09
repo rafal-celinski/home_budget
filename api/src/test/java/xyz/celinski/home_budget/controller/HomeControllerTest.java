@@ -16,7 +16,7 @@ public class HomeControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    public void shouldReturnDefaultMessage() throws Exception {
+    public void homeEndpoint_shouldReturnDefaultMessage() throws Exception {
         this.mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("API is up and running!"));
