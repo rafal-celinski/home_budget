@@ -6,6 +6,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
+import xyz.celinski.home_budget.dto.RegisterDTO;
+import xyz.celinski.home_budget.dto.UserDTO;
 import xyz.celinski.home_budget.exception.InvalidUserDetailsException;
 import xyz.celinski.home_budget.exception.UserAlreadyExistsException;
 import xyz.celinski.home_budget.model.User;
@@ -27,33 +29,15 @@ public class UserServiceTest {
     @InjectMocks
     UserService userService;
 
-    @Test
-    public void getUserByEmail_shouldReturnUser_whenUserWithGivenEmailExistsInRepository() {
-        when(userRepository.findByEmail(anyString()))
-                .thenReturn(Optional.of(new User("test@email.com", "passwordHash")));
-
-        Optional<User> found = userService.getUserByEmail("test@email.com");
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getEmail()).isEqualTo("test@email.com");
-    }
-
-    @Test
-    public void getUserByEmail_shouldReturnEmpty_whenUserWithGivenEmailDoesntExistInRepository() {
-        when(userRepository.findByEmail(anyString()))
-                .thenReturn(Optional.empty());
-
-        Optional<User> found = userService.getUserByEmail("test@email.com");
-
-        assertThat(found).isNotPresent();
-    }
 
     @Test
     public void registerNewUser_shouldThrowUserAlreadyExistsException_whenEmailAlreadyExists() {
         User user = new User("test@email.com", "passwordHash");
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-        assertThatThrownBy(() -> userService.registerNewUser(user))
+        RegisterDTO registerDTO = new RegisterDTO("test@email.com", "passwordHash");
+
+        assertThatThrownBy(() -> userService.registerNewUser(registerDTO))
                 .isInstanceOf(UserAlreadyExistsException.class)
                 .hasMessage("User with this email already exists");
     }
@@ -63,8 +47,9 @@ public class UserServiceTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenThrow(new DataAccessException("") {});
 
-        User user = new User("test@email.com", "passwordHash");
-        assertThatThrownBy(() -> userService.registerNewUser(user))
+        RegisterDTO registerDTO = new RegisterDTO("test@email.com", "passwordHash");
+
+        assertThatThrownBy(() -> userService.registerNewUser(registerDTO))
                 .isInstanceOf(InvalidUserDetailsException.class)
                 .hasMessage("Email and password cannot be empty");
     }
@@ -75,10 +60,11 @@ public class UserServiceTest {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        User savedUser = userService.registerNewUser(user);
+        RegisterDTO registerDTO = new RegisterDTO("test@email.com", "passwordHash");
 
-        assertThat(savedUser).isNotNull();
-        assertThat(savedUser.getEmail()).isEqualTo(user.getEmail());
-        assertThat(savedUser.getPasswordHash()).isEqualTo(user.getPasswordHash());
+        UserDTO userDTO = userService.registerNewUser(registerDTO);
+
+        assertThat(userDTO).isNotNull();
+        assertThat(userDTO.getEmail()).isEqualTo(user.getEmail());
     }
 }

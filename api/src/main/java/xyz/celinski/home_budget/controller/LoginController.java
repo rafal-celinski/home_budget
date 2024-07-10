@@ -29,8 +29,8 @@ public class LoginController {
     @PostMapping
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
         try {
-            String token = authService.login(loginDTO.getEmail(), loginDTO.getPasswordHash());
-            return ResponseEntity.ok(new TokenDTO(token));
+            TokenDTO tokenDTO = authService.login(loginDTO);
+            return ResponseEntity.ok(tokenDTO);
         }
         catch (UserNotFoundException | InvalidCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

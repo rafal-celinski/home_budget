@@ -30,8 +30,7 @@ public class UserControllerTest {
 
     @Test
     public void registerEndpoint_shouldReturnUserDTO_whenUserWasAdded() throws Exception {
-        User user = new User("test@email.com", "passwordHash");
-        when(userService.registerNewUser(any(User.class))).thenReturn(user);
+        when(userService.registerNewUser(any(RegisterDTO.class))).thenReturn(new UserDTO("test@email.com"));
 
         RegisterDTO registerDTO = new RegisterDTO("test@email.com", "passwordHash");
 
@@ -44,7 +43,7 @@ public class UserControllerTest {
 
     @Test
     public void registerEndpoint_shouldReturnConflict_whenUserAlreadyExists() throws Exception {
-        when(userService.registerNewUser(any(User.class))).thenThrow(new UserAlreadyExistsException());
+        when(userService.registerNewUser(any(RegisterDTO.class))).thenThrow(new UserAlreadyExistsException());
 
         RegisterDTO registerDTO = new RegisterDTO("test@email.com", "passwordHash");
 
@@ -56,7 +55,7 @@ public class UserControllerTest {
 
     @Test
     public void registerEndpoint_shouldReturnBadRequest_whenRegisterDetailsAreInvalid() throws Exception {
-        when(userService.registerNewUser(any(User.class))).thenThrow(new InvalidUserDetailsException());
+        when(userService.registerNewUser(any(RegisterDTO.class))).thenThrow(new InvalidUserDetailsException());
 
         RegisterDTO registerDTO = new RegisterDTO("test@email.com", "passwordHash");
 

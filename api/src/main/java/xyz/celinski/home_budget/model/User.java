@@ -15,8 +15,12 @@ public class User {
     private String passwordHash;
 
     public User() {}
-
     public User(String email, String passwordHash) {
+        this.email = email;
+        this.passwordHash = passwordHash;
+    }
+    public User(Long id, String email, String passwordHash) {
+        this.id = id;
         this.email = email;
         this.passwordHash = passwordHash;
     }

@@ -1,13 +1,17 @@
 package xyz.celinski.home_budget.service;
 
+import org.apache.juli.logging.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import xyz.celinski.home_budget.dto.LoginDTO;
+import xyz.celinski.home_budget.dto.TokenDTO;
 import xyz.celinski.home_budget.exception.InvalidCredentialsException;
 import xyz.celinski.home_budget.exception.UserNotFoundException;
 import xyz.celinski.home_budget.model.User;
+import xyz.celinski.home_budget.repository.UserRepository;
 
 import java.util.Optional;
 
@@ -21,7 +25,7 @@ import static org.mockito.Mockito.when;
 public class AuthServiceTest {
 
     @Mock
-    UserService userService;
+    UserRepository userRepository;
 
     @Mock
     TokenService tokenService;
@@ -30,35 +34,38 @@ public class AuthServiceTest {
     AuthService authService;
 
     @Test
-    public void login_shouldReturnToken_whenCredentialsAreValid() {
-        User user = new User("test@email.com", "passwordHash");
-        user.setId(1L);
-        when(userService.getUserByEmail(anyString()))
-                .thenReturn(Optional.of(user));
-        when(tokenService.generateToken(anyLong()))
-                .thenReturn("dummy-token");
+    public void login_shouldReturnTokenDTO_whenCredentialsAreValid() {
 
-        String token = authService.login("test@email.com", "passwordHash");
+        when(userRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(new User(1L, "test@email.com", "passwordHash")));
+        when(tokenService.generateToken(anyLong())).thenReturn(new TokenDTO("dummy-token"));
+
+        LoginDTO loginDTO = new LoginDTO("test@email.com", "passwordHash");
+
+        TokenDTO token = authService.login(loginDTO);
         assertThat(token).isNotNull();
-        assertThat(token).isEqualTo("dummy-token");
+        assertThat(token.getToken()).isEqualTo("dummy-token");
     }
 
     @Test
     public void login_shouldThrowUserNotFoundException_whenUserWithGivenEmailDoesntExist() {
-        when(userService.getUserByEmail(anyString()))
-                .thenReturn(Optional.empty());
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.login("test@email.com", "passwordHash"))
+        LoginDTO loginDTO = new LoginDTO("test@email.com", "passwordHash");
+
+        assertThatThrownBy(() -> authService.login(loginDTO))
                 .isInstanceOf(UserNotFoundException.class)
                 .hasMessage("User with this email does not exist");
     }
 
     @Test
     public void login_shouldThrowInvalidCredentialsException_whenPasswordIsIncorrect() {
-        when(userService.getUserByEmail(anyString()))
+        when(userRepository.findByEmail(anyString()))
                 .thenReturn(Optional.of(new User("test@email.com", "passwordHash")));
 
-        assertThatThrownBy(() -> authService.login("test@email.com", "wrongHash"))
+        LoginDTO loginDTO = new LoginDTO("test@email.com", "incorrectPassword");
+
+        assertThatThrownBy(() -> authService.login(loginDTO))
                 .isInstanceOf(InvalidCredentialsException.class)
                 .hasMessage("Invalid password");
     }

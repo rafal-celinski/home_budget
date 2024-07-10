@@ -8,10 +8,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import xyz.celinski.home_budget.dto.LoginDTO;
+import xyz.celinski.home_budget.dto.TokenDTO;
 import xyz.celinski.home_budget.exception.InvalidCredentialsException;
 import xyz.celinski.home_budget.exception.UserNotFoundException;
 import xyz.celinski.home_budget.service.AuthService;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -29,7 +31,7 @@ public class LoginControllerTest {
 
     @Test
     public void loginEndpoint_shouldReturnToken_whenCredentialsAreValid() throws Exception {
-        when(authService.login(anyString(), anyString())).thenReturn("dummy-token");
+        when(authService.login(any(LoginDTO.class))).thenReturn(new TokenDTO("dummy-token"));
 
         LoginDTO loginDTO = new LoginDTO("test@email.com", "password_hash");
 
@@ -42,7 +44,7 @@ public class LoginControllerTest {
 
     @Test
     public void loginEndpoint_shouldReturnUnauthorised_whenUserNotFound() throws Exception {
-        when(authService.login(anyString(), anyString())).thenThrow(new UserNotFoundException());
+        when(authService.login(any(LoginDTO.class))).thenThrow(new UserNotFoundException());
 
         LoginDTO loginDTO = new LoginDTO("test@email.com", "password_hash");
 
@@ -54,7 +56,7 @@ public class LoginControllerTest {
 
     @Test
     public void loginEndpoint_shouldReturnUnauthorised_whenCredentialsAreInvalid() throws Exception {
-        when(authService.login(anyString(), anyString())).thenThrow(new InvalidCredentialsException());
+        when(authService.login(any(LoginDTO.class))).thenThrow(new InvalidCredentialsException());
 
         LoginDTO loginDTO = new LoginDTO("test@email.com", "password_hash");
 

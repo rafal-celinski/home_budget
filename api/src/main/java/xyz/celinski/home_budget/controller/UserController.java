@@ -28,15 +28,9 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterDTO registerDTO) {
-        String email = registerDTO.getEmail();
-        String passwordHash = registerDTO.getPasswordHash();
-
-        User newUser = new User(email, passwordHash);
-
         try {
-            User registeredUser = userService.registerNewUser(newUser);
-            return ResponseEntity.ok(new UserDTO(registeredUser.getEmail()));
-            // TODO: Entity->DTO converter
+            UserDTO registeredUserDTO = userService.registerNewUser(registerDTO);
+            return ResponseEntity.ok(registeredUserDTO);
         }
         catch (UserAlreadyExistsException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT)

@@ -1,25 +1,28 @@
 package xyz.celinski.home_budget.service;
 
 import org.springframework.stereotype.Service;
+import xyz.celinski.home_budget.dto.LoginDTO;
+import xyz.celinski.home_budget.dto.TokenDTO;
 import xyz.celinski.home_budget.exception.InvalidCredentialsException;
 import xyz.celinski.home_budget.exception.UserNotFoundException;
 import xyz.celinski.home_budget.model.User;
+import xyz.celinski.home_budget.repository.UserRepository;
 
 @Service
 public class AuthService {
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final TokenService tokenService;
 
-    AuthService(UserService userService, TokenService tokenService) {
-        this.userService = userService;
+    AuthService(UserRepository userRepository, TokenService tokenService) {
+        this.userRepository = userRepository;
         this.tokenService = tokenService;
     }
 
-    public String login(String email, String passwordHash) {
-        User user = userService.getUserByEmail(email)
+    public TokenDTO login(LoginDTO loginDTO) {
+        User user = userRepository.findByEmail(loginDTO.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("User with this email does not exist"));
 
-        if (!user.getPasswordHash().equals(passwordHash)) {
+        if (!user.getPasswordHash().equals(loginDTO.getPasswordHash())) {
             throw new InvalidCredentialsException("Invalid password");
         }
 
