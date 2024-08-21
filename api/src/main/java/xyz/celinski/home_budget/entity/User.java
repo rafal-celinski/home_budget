@@ -1,4 +1,4 @@
-package xyz.celinski.home_budget.model;
+package xyz.celinski.home_budget.entity;
 
 import jakarta.persistence.*;
 

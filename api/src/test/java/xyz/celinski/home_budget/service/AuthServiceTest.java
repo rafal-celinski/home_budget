@@ -1,6 +1,5 @@
 package xyz.celinski.home_budget.service;
 
-import org.apache.juli.logging.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,7 +9,7 @@ import xyz.celinski.home_budget.dto.LoginDTO;
 import xyz.celinski.home_budget.dto.TokenDTO;
 import xyz.celinski.home_budget.exception.InvalidCredentialsException;
 import xyz.celinski.home_budget.exception.UserNotFoundException;
-import xyz.celinski.home_budget.model.User;
+import xyz.celinski.home_budget.entity.User;
 import xyz.celinski.home_budget.repository.UserRepository;
 
 import java.util.Optional;

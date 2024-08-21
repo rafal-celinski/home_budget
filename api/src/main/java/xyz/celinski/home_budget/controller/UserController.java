@@ -12,7 +12,6 @@ import xyz.celinski.home_budget.dto.UserDTO;
 import xyz.celinski.home_budget.exception.InvalidUserDetailsException;
 import xyz.celinski.home_budget.exception.UserAlreadyExistsException;
 import xyz.celinski.home_budget.service.UserService;
-import xyz.celinski.home_budget.model.User;
 
 import java.util.Date;
 

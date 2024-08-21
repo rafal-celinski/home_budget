@@ -3,7 +3,7 @@ package xyz.celinski.home_budget.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import xyz.celinski.home_budget.model.User;
+import xyz.celinski.home_budget.entity.User;
 
 import java.util.Optional;
 

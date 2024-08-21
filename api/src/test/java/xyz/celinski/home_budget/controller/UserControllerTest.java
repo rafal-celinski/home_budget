@@ -11,7 +11,6 @@ import xyz.celinski.home_budget.dto.RegisterDTO;
 import xyz.celinski.home_budget.dto.UserDTO;
 import xyz.celinski.home_budget.exception.InvalidUserDetailsException;
 import xyz.celinski.home_budget.exception.UserAlreadyExistsException;
-import xyz.celinski.home_budget.model.User;
 import xyz.celinski.home_budget.service.UserService;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;

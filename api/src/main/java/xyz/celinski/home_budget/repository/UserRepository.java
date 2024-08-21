@@ -1,7 +1,7 @@
 package xyz.celinski.home_budget.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import xyz.celinski.home_budget.model.User;
+import xyz.celinski.home_budget.entity.User;
 
 import java.util.Optional;
 
