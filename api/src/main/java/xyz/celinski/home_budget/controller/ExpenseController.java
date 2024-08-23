@@ -1,26 +1,23 @@
 package xyz.celinski.home_budget.controller;
 
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.groups.Default;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import xyz.celinski.home_budget.dto.ExpenseDTO;
-import xyz.celinski.home_budget.dto.HttpErrorDTO;
 import xyz.celinski.home_budget.dto.TokenDTO;
 import xyz.celinski.home_budget.dto.validation.groups.OnCreate;
 import xyz.celinski.home_budget.dto.validation.groups.OnUpdate;
-import xyz.celinski.home_budget.exception.AccessDeniedException;
-import xyz.celinski.home_budget.exception.ExpenseNotFoundException;
+import xyz.celinski.home_budget.exception.InvalidDateRangeException;
+import xyz.celinski.home_budget.exception.InvalidTokenException;
 import xyz.celinski.home_budget.service.ExpenseService;
 import xyz.celinski.home_budget.service.TokenService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
 
 
 @RestController
@@ -35,34 +32,27 @@ public class ExpenseController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getExpenses(@RequestParam(value = "startDate") @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}") String startDate,
-                                         @RequestParam(value = "endDate", required = false) @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}") String endDate,
+    public ResponseEntity<?> getExpenses(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String startDate,
+                                         @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String endDate,
                                          @RequestHeader("Authorization") String authorizationHeader,
                                          Pageable pageable) {
 
         TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
         if (!tokenService.isTokenValid(tokenDTO)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.UNAUTHORIZED.value(), "Invalid token", "/expenses")
-            );
+            throw new InvalidTokenException("Invalid token");
         }
 
-        LocalDate start;
-        LocalDate end;
+        LocalDate start, end;
         try {
             start = LocalDate.parse(startDate);
             end = endDate != null ? LocalDate.parse(endDate) : LocalDate.now();
+        }
+        catch (DateTimeParseException e) {
+            throw new InvalidDateRangeException("Date doesnt exist");
+        }
 
-            if (start.isAfter(end)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new HttpErrorDTO(
-                        new Date(), HttpStatus.BAD_REQUEST.value(), "Start date cannot be after end date", "/expenses")
-                );
-            }
-
-        } catch (DateTimeParseException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.BAD_REQUEST.value(), "Invalid date format", "/expenses")
-            );
+        if (start.isAfter(end)) {
+            throw new InvalidDateRangeException("Start date cannot be after end date");
         }
 
         Long userId = tokenService.extractUserId(tokenDTO);
@@ -77,9 +67,7 @@ public class ExpenseController {
 
         TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
         if (!tokenService.isTokenValid(tokenDTO)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.UNAUTHORIZED.value(), "Invalid token", "/expenses")
-            );
+            throw new InvalidTokenException("Invalid token");
         }
 
         Long userId = tokenService.extractUserId(tokenDTO);
@@ -93,27 +81,13 @@ public class ExpenseController {
 
         TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
         if (!tokenService.isTokenValid(tokenDTO)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.UNAUTHORIZED.value(), "Invalid token", "/expenses")
-            );
+            throw new InvalidTokenException("Invalid token");
         }
 
         Long userId = tokenService.extractUserId(tokenDTO);
 
-        try {
-            expenseService.deleteExpenseById(id, userId);
-            return ResponseEntity.noContent().build();
-        }
-        catch (ExpenseNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.NOT_FOUND.value(), e.getMessage(), "/expenses")
-            );
-        }
-        catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.FORBIDDEN.value(), e.getMessage(), "/expenses")
-            );
-        }
+        expenseService.deleteExpenseById(id, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
@@ -123,26 +97,11 @@ public class ExpenseController {
 
         TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
         if (!tokenService.isTokenValid(tokenDTO)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.UNAUTHORIZED.value(), "Invalid token", "/expenses")
-            );
+            throw new InvalidTokenException("Invalid token");
         }
 
         Long userId = tokenService.extractUserId(tokenDTO);
-
-        try {
-            ExpenseDTO newExpenseDTO = expenseService.updateExpenseById(id, expenseDTO, userId);
-            return ResponseEntity.ok(newExpenseDTO);
-        }
-        catch (ExpenseNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.NOT_FOUND.value(), e.getMessage(), "/expenses")
-            );
-        }
-        catch (AccessDeniedException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new HttpErrorDTO(
-                    new Date(), HttpStatus.FORBIDDEN.value(), e.getMessage(), "/expenses")
-            );
-        }
+        ExpenseDTO newExpenseDTO = expenseService.updateExpenseById(id, expenseDTO, userId);
+        return ResponseEntity.ok(newExpenseDTO);
     }
 }

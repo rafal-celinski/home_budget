@@ -1,16 +1,12 @@
 package xyz.celinski.home_budget.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.celinski.home_budget.dto.HttpErrorDTO;
 import xyz.celinski.home_budget.dto.RegisterDTO;
 import xyz.celinski.home_budget.dto.UserDTO;
-import xyz.celinski.home_budget.exception.InvalidUserDetailsException;
-import xyz.celinski.home_budget.exception.UserAlreadyExistsException;
 import xyz.celinski.home_budget.service.UserService;
 
 import java.util.Date;
@@ -27,17 +23,7 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterDTO registerDTO) {
-        try {
-            UserDTO registeredUserDTO = userService.registerNewUser(registerDTO);
-            return ResponseEntity.ok(registeredUserDTO);
-        }
-        catch (UserAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new HttpErrorDTO(new Date(), HttpStatus.CONFLICT.value(), e.getMessage(), "/user/register"));
-        }
-        catch (InvalidUserDetailsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new HttpErrorDTO(new Date(), HttpStatus.BAD_REQUEST.value(), e.getMessage(), "/user/register"));
-        }
+        UserDTO registeredUserDTO = userService.registerNewUser(registerDTO);
+        return ResponseEntity.ok(registeredUserDTO);
     }
 }
