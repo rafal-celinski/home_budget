@@ -17,7 +17,6 @@ import xyz.celinski.home_budget.service.ExpenseService;
 import xyz.celinski.home_budget.service.TokenService;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 
 
 @RestController
@@ -31,46 +30,36 @@ public class ExpenseController {
         this.tokenService = tokenService;
     }
 
-    @GetMapping
-    public ResponseEntity<?> getExpenses(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String startDate,
-                                         @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) String endDate,
-                                         @RequestHeader("Authorization") String authorizationHeader,
-                                         Pageable pageable) {
-
+    private Long validAuthorizationAndExtractUserID(String authorizationHeader) {
         TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
         if (!tokenService.isTokenValid(tokenDTO)) {
             throw new InvalidTokenException("Invalid token");
         }
+        return tokenService.extractUserId(tokenDTO);
+    }
 
-        LocalDate start, end;
-        try {
-            start = LocalDate.parse(startDate);
-            end = endDate != null ? LocalDate.parse(endDate) : LocalDate.now();
-        }
-        catch (DateTimeParseException e) {
-            throw new InvalidDateRangeException("Date doesnt exist");
-        }
+    @GetMapping
+    public ResponseEntity<?> getExpenses(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                         @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                         @RequestHeader("Authorization") String authorizationHeader,
+                                         Pageable pageable) {
 
-        if (start.isAfter(end)) {
+        Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
+
+        LocalDate finalEndDate = endDate == null ? LocalDate.now() : endDate;
+        if (startDate.isAfter(finalEndDate)) {
             throw new InvalidDateRangeException("Start date cannot be after end date");
         }
 
-        Long userId = tokenService.extractUserId(tokenDTO);
-        Page<ExpenseDTO> expenses = expenseService.getExpensesByDate(start, end, userId, pageable);
+        Page<ExpenseDTO> expenses = expenseService.getExpensesByDate(startDate, finalEndDate, userId, pageable);
         return ResponseEntity.ok(expenses);
     }
-
 
     @PostMapping
     public ResponseEntity<?> addExpense(@RequestBody @Validated({OnCreate.class, Default.class}) ExpenseDTO expenseDTO,
                                         @RequestHeader("Authorization") String authorizationHeader) {
 
-        TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
-        if (!tokenService.isTokenValid(tokenDTO)) {
-            throw new InvalidTokenException("Invalid token");
-        }
-
-        Long userId = tokenService.extractUserId(tokenDTO);
+        Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
         ExpenseDTO newExpenseDTO = expenseService.addExpense(expenseDTO, userId);
         return ResponseEntity.ok(newExpenseDTO);
     }
@@ -79,13 +68,7 @@ public class ExpenseController {
     public ResponseEntity<?> deleteExpense(@PathVariable Long id,
                                            @RequestHeader("Authorization") String authorizationHeader) {
 
-        TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
-        if (!tokenService.isTokenValid(tokenDTO)) {
-            throw new InvalidTokenException("Invalid token");
-        }
-
-        Long userId = tokenService.extractUserId(tokenDTO);
-
+        Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
         expenseService.deleteExpenseById(id, userId);
         return ResponseEntity.noContent().build();
     }
@@ -95,12 +78,7 @@ public class ExpenseController {
                                            @RequestBody @Validated({OnUpdate.class, Default.class}) ExpenseDTO expenseDTO,
                                            @RequestHeader("Authorization") String authorizationHeader) {
 
-        TokenDTO tokenDTO = tokenService.authorizationHeaderToTokenDTO(authorizationHeader);
-        if (!tokenService.isTokenValid(tokenDTO)) {
-            throw new InvalidTokenException("Invalid token");
-        }
-
-        Long userId = tokenService.extractUserId(tokenDTO);
+        Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
         ExpenseDTO newExpenseDTO = expenseService.updateExpenseById(id, expenseDTO, userId);
         return ResponseEntity.ok(newExpenseDTO);
     }
