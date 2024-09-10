@@ -78,6 +78,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(httpErrorDTO, status);
     }
 
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<HttpErrorDTO> handleCategoryNotFoundException(CategoryNotFoundException e, HttpServletRequest request) {
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        HttpErrorDTO httpErrorDTO = createHttpErrorDTO(LocalDateTime.now(), status.value(), e.getMessage(), request.getRequestURI());
+        return new ResponseEntity<>(httpErrorDTO, status);
+    }
+
 }
 
 
