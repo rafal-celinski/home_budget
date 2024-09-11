@@ -17,17 +17,17 @@ import java.util.stream.Collectors;
 @Service
 public class CategoryService {
     private final CategoryRepository categoryRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final CategoryMapper categoryMapper;
 
-    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, CategoryMapper categoryMapper) {
+    public CategoryService(CategoryRepository categoryRepository, UserService userService, CategoryMapper categoryMapper) {
         this.categoryRepository = categoryRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.categoryMapper = categoryMapper;
     }
 
     public List<CategoryDTO> getCategories(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         return categoryRepository.findByUser(user)
                 .stream()
@@ -36,7 +36,7 @@ public class CategoryService {
     }
 
     public CategoryDTO addCategory(CategoryDTO categoryDTO, Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         Category category = categoryMapper.toEntity(categoryDTO, user);
         category = categoryRepository.save(category);
@@ -45,7 +45,7 @@ public class CategoryService {
 
     public void deleteCategoryById(Long categoryId, Long userId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         if (!category.getUser().equals(user)) throw new AccessDeniedException("This user does not have permission to delete this category");
 
@@ -54,7 +54,7 @@ public class CategoryService {
 
     public CategoryDTO updateCategory(Long categoryId, CategoryDTO categoryDTO, Long userId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         if (!category.getUser().equals(user)) throw new AccessDeniedException("This user does not have permission to update this category");
 

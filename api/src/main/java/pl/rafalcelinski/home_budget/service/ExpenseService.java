@@ -18,24 +18,24 @@ import java.time.LocalDate;
 @Service
 public class ExpenseService {
     private final ExpenseRepository expenseRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final ExpenseMapper expenseMapper;
 
-    public ExpenseService(ExpenseRepository expenseRepository, UserRepository userRepository, ExpenseMapper expenseMapper) {
+    public ExpenseService(ExpenseRepository expenseRepository, UserService userService, ExpenseMapper expenseMapper) {
         this.expenseRepository = expenseRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
         this.expenseMapper = expenseMapper;
     }
 
     public Page<ExpenseDTO> getExpensesByDate(LocalDate startDate, LocalDate endDate, Long userId, Pageable pageable) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         return expenseRepository.findByUserAndDateBetween(user, startDate, endDate, pageable)
                 .map(expenseMapper::toDTO);
     }
 
     public ExpenseDTO addExpense(ExpenseDTO expenseDTO, Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         Expense expense = expenseMapper.toEntity(expenseDTO, user);
         expense = expenseRepository.save(expense);
@@ -44,7 +44,7 @@ public class ExpenseService {
 
     public void deleteExpenseById(Long expenseId, Long userId) {
         Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         if (!expense.getUser().equals(user)) throw new AccessDeniedException("User does not have permission to delete this expense");
 
@@ -53,7 +53,7 @@ public class ExpenseService {
 
     public ExpenseDTO updateExpenseById(Long expenseId, ExpenseDTO expenseDTO, Long userId) {
         Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
-        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userService.getUserById(userId);
 
         if (!expense.getUser().equals(user)) throw new AccessDeniedException("User does not have permission to delete this expense");
 

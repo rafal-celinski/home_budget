@@ -7,6 +7,7 @@ import pl.rafalcelinski.home_budget.dto.UserDTO;
 import pl.rafalcelinski.home_budget.exception.InvalidUserDetailsException;
 import pl.rafalcelinski.home_budget.exception.UserAlreadyExistsException;
 import pl.rafalcelinski.home_budget.entity.User;
+import pl.rafalcelinski.home_budget.exception.UserNotFoundException;
 import pl.rafalcelinski.home_budget.mapper.UserMapper;
 import pl.rafalcelinski.home_budget.repository.UserRepository;
 
@@ -33,5 +34,9 @@ public class UserService {
         catch (DataAccessException e) {
             throw new InvalidUserDetailsException("Email and password cannot be empty");
         }
+    }
+
+    User getUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }
