@@ -7,6 +7,7 @@ import pl.rafalcelinski.home_budget.entity.User;
 import pl.rafalcelinski.home_budget.exception.AccessDeniedException;
 import pl.rafalcelinski.home_budget.exception.CategoryNotFoundException;
 import pl.rafalcelinski.home_budget.exception.UserNotFoundException;
+import pl.rafalcelinski.home_budget.mapper.CategoryMapper;
 import pl.rafalcelinski.home_budget.repository.CategoryRepository;
 import pl.rafalcelinski.home_budget.repository.UserRepository;
 
@@ -17,10 +18,12 @@ import java.util.stream.Collectors;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final CategoryMapper categoryMapper;
 
-    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository) {
+    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, CategoryMapper categoryMapper) {
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.categoryMapper = categoryMapper;
     }
 
     public List<CategoryDTO> getCategories(Long userId) {
@@ -28,16 +31,16 @@ public class CategoryService {
 
         return categoryRepository.findByUser(user)
                 .stream()
-                .map(this::convertToDTO)
+                .map(categoryMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     public CategoryDTO addCategory(CategoryDTO categoryDTO, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        Category category = convertToEntity(categoryDTO, user);
+        Category category = categoryMapper.toEntity(categoryDTO, user);
         category = categoryRepository.save(category);
-        return convertToDTO(category);
+        return categoryMapper.toDTO(category);
     }
 
     public void deleteCategoryById(Long categoryId, Long userId) {
@@ -57,24 +60,8 @@ public class CategoryService {
 
         categoryDTO.setId(categoryId);
 
-        Category updatedCategory = convertToEntity(categoryDTO, user);
+        Category updatedCategory = categoryMapper.toEntity(categoryDTO, user);
         updatedCategory = categoryRepository.save(updatedCategory);
-        return convertToDTO(updatedCategory);
-    }
-
-    private Category convertToEntity(CategoryDTO categoryDTO, User user) {
-        Category category = new Category();
-        category.setId(categoryDTO.getId());
-        category.setName(categoryDTO.getName());
-        category.setUser(user);
-        return category;
-    }
-
-    private CategoryDTO convertToDTO(Category category) {
-        CategoryDTO categoryDTO = new CategoryDTO();
-        categoryDTO.setId(category.getId());
-        categoryDTO.setName(category.getName());
-        return categoryDTO;
+        return categoryMapper.toDTO(updatedCategory);
     }
 }
-

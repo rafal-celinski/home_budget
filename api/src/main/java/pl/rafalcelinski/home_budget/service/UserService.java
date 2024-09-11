@@ -7,14 +7,17 @@ import pl.rafalcelinski.home_budget.dto.UserDTO;
 import pl.rafalcelinski.home_budget.exception.InvalidUserDetailsException;
 import pl.rafalcelinski.home_budget.exception.UserAlreadyExistsException;
 import pl.rafalcelinski.home_budget.entity.User;
+import pl.rafalcelinski.home_budget.mapper.UserMapper;
 import pl.rafalcelinski.home_budget.repository.UserRepository;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    UserService(UserRepository userRepository) {
+    UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     public UserDTO registerNewUser(RegisterDTO registerDTO) {
@@ -23,26 +26,12 @@ public class UserService {
         }
 
         try {
-            User user = registerDTOtoUser(registerDTO);
+            User user = userMapper.toEntity(registerDTO);
             user = userRepository.save(user);
-            return userToUserDTO(user);
+            return userMapper.toDTO(user);
         }
         catch (DataAccessException e) {
             throw new InvalidUserDetailsException("Email and password cannot be empty");
         }
     }
-
-    private User registerDTOtoUser(RegisterDTO registerDTO) {
-        User user = new User();
-        user.setEmail(registerDTO.getEmail());
-        user.setPasswordHash(registerDTO.getPasswordHash());
-        return user;
-    }
-
-    private UserDTO userToUserDTO(User user) {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail(user.getEmail());
-        return userDTO;
-    }
-
 }
