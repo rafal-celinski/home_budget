@@ -44,24 +44,26 @@ public class CategoryService {
     }
 
     public void deleteCategoryById(Long categoryId, Long userId) {
-        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
-        User user = userService.getUserById(userId);
-
-        if (!category.getUser().equals(user)) throw new AccessDeniedException("This user does not have permission to delete this category");
-
+        Category category = getCategoryByIdAndUser(categoryId, userId);
         categoryRepository.delete(category);
     }
 
     public CategoryDTO updateCategory(Long categoryId, CategoryDTO categoryDTO, Long userId) {
-        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
-        User user = userService.getUserById(userId);
-
-        if (!category.getUser().equals(user)) throw new AccessDeniedException("This user does not have permission to update this category");
+        Category category = getCategoryByIdAndUser(categoryId, userId);
 
         categoryDTO.setId(categoryId);
 
-        Category updatedCategory = categoryMapper.toEntity(categoryDTO, user);
+        Category updatedCategory = categoryMapper.toEntity(categoryDTO, category.getUser());
         updatedCategory = categoryRepository.save(updatedCategory);
         return categoryMapper.toDTO(updatedCategory);
+    }
+
+    Category getCategoryByIdAndUser(Long categoryId, Long userId) {
+        Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category not found"));
+        User user = userService.getUserById(userId);
+
+        if (!category.getUser().equals(user)) throw new AccessDeniedException("This user does not have permission to access this category");
+
+        return category;
     }
 }
