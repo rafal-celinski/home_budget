@@ -4,7 +4,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.rafalcelinski.home_budget.dto.ExpenseDTO;
+import pl.rafalcelinski.home_budget.entity.Category;
 import pl.rafalcelinski.home_budget.exception.AccessDeniedException;
+import pl.rafalcelinski.home_budget.exception.CategoryNotFoundException;
 import pl.rafalcelinski.home_budget.exception.ExpenseNotFoundException;
 import pl.rafalcelinski.home_budget.exception.UserNotFoundException;
 import pl.rafalcelinski.home_budget.entity.Expense;
@@ -43,24 +45,26 @@ public class ExpenseService {
     }
 
     public void deleteExpenseById(Long expenseId, Long userId) {
-        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
-        User user = userService.getUserById(userId);
-
-        if (!expense.getUser().equals(user)) throw new AccessDeniedException("User does not have permission to delete this expense");
-
+        Expense expense = getExpenseByIdAndUser(expenseId, userId);
         expenseRepository.delete(expense);
     }
 
     public ExpenseDTO updateExpenseById(Long expenseId, ExpenseDTO expenseDTO, Long userId) {
-        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
-        User user = userService.getUserById(userId);
-
-        if (!expense.getUser().equals(user)) throw new AccessDeniedException("User does not have permission to delete this expense");
+        Expense expense = getExpenseByIdAndUser(expenseId, userId);
 
         expenseDTO.setId(expenseId);
 
-        Expense newExpense = expenseMapper.toEntity(expenseDTO, user);
+        Expense newExpense = expenseMapper.toEntity(expenseDTO, expense.getUser());
         newExpense = expenseRepository.save(newExpense);
         return expenseMapper.toDTO(newExpense);
+    }
+
+    Expense getExpenseByIdAndUser(Long expenseId, Long userId) {
+        Expense expense = expenseRepository.findById(expenseId).orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
+        User user = userService.getUserById(userId);
+
+        if (!expense.getUser().equals(user)) throw new AccessDeniedException("This user does not have permission to access this expense");
+
+        return expense;
     }
 }
