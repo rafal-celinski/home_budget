@@ -12,7 +12,7 @@ public class ExpenseDTO {
     private Long Id;
     @NotNull
     @Positive
-    private Long amount;
+    private Double amount;
     @NotBlank
     private String description;
     @NotNull
@@ -29,11 +29,11 @@ public class ExpenseDTO {
         Id = id;
     }
 
-    public Long getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(Long amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 

@@ -13,7 +13,7 @@ public class Expense {
     private Long id;
 
     @Column
-    private Long amount;
+    private Double amount;
 
     @Column
     private String description;
@@ -37,11 +37,11 @@ public class Expense {
         this.id = id;
     }
 
-    public Long getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(Long amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 
