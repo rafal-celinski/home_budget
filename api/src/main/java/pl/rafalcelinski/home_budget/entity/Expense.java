@@ -25,6 +25,9 @@ public class Expense {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     public Long getId() {
         return id;
@@ -50,6 +53,14 @@ public class Expense {
         this.description = description;
     }
 
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     public User getUser() {
         return user;
     }
@@ -58,11 +69,11 @@ public class Expense {
         this.user = user;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }

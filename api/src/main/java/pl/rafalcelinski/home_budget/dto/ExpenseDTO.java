@@ -18,6 +18,8 @@ public class ExpenseDTO {
     @NotNull
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
     private String date;
+    @NotNull
+    private Long categoryId;
 
     public Long getId() {
         return Id;
@@ -49,5 +51,13 @@ public class ExpenseDTO {
 
     public void setDate(String date) {
         this.date = date;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 }

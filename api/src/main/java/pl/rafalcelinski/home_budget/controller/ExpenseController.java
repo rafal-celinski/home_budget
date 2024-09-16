@@ -17,6 +17,7 @@ import pl.rafalcelinski.home_budget.service.ExpenseService;
 import pl.rafalcelinski.home_budget.service.TokenService;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 
 @RestController
@@ -40,18 +41,26 @@ public class ExpenseController {
 
     @GetMapping
     public ResponseEntity<?> getExpenses(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-                                         @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+                                         @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> endDate,
+                                         @RequestParam(value = "categoryId", required = false) Optional<Long> categoryId,
                                          @RequestHeader("Authorization") String authorizationHeader,
                                          Pageable pageable) {
 
         Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
 
-        LocalDate finalEndDate = endDate == null ? LocalDate.now() : endDate;
+        LocalDate finalEndDate = endDate.orElse(LocalDate.now());
         if (startDate.isAfter(finalEndDate)) {
             throw new InvalidDateRangeException("Start date cannot be after end date");
         }
 
-        Page<ExpenseDTO> expenses = expenseService.getExpensesByDate(startDate, finalEndDate, userId, pageable);
+        Page<ExpenseDTO> expenses;
+        if (categoryId.isPresent()) {
+            expenses = expenseService.getExpensesByDateAndCategoryId(startDate, finalEndDate, categoryId.get(), userId, pageable);
+        }
+        else {
+            expenses = expenseService.getExpensesByDate(startDate, finalEndDate, userId, pageable);
+        }
+
         return ResponseEntity.ok(expenses);
     }
 
