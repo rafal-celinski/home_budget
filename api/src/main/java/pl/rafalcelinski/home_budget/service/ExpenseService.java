@@ -4,18 +4,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.rafalcelinski.home_budget.dto.ExpenseDTO;
+import pl.rafalcelinski.home_budget.dto.ExpenseStatisticsDTO;
 import pl.rafalcelinski.home_budget.entity.Category;
 import pl.rafalcelinski.home_budget.exception.AccessDeniedException;
-import pl.rafalcelinski.home_budget.exception.CategoryNotFoundException;
 import pl.rafalcelinski.home_budget.exception.ExpenseNotFoundException;
-import pl.rafalcelinski.home_budget.exception.UserNotFoundException;
 import pl.rafalcelinski.home_budget.entity.Expense;
 import pl.rafalcelinski.home_budget.entity.User;
 import pl.rafalcelinski.home_budget.mapper.ExpenseMapper;
+import pl.rafalcelinski.home_budget.mapper.ExpenseStatisticsMapper;
+import pl.rafalcelinski.home_budget.query.ExpenseStatistics;
 import pl.rafalcelinski.home_budget.repository.ExpenseRepository;
-import pl.rafalcelinski.home_budget.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 public class ExpenseService {
@@ -23,12 +24,14 @@ public class ExpenseService {
     private final UserService userService;
     private final ExpenseMapper expenseMapper;
     private final CategoryService categoryService;
+    private final ExpenseStatisticsMapper expenseStatisticsMapper;
 
-    public ExpenseService(ExpenseRepository expenseRepository, UserService userService, ExpenseMapper expenseMapper, CategoryService categoryService) {
+    public ExpenseService(ExpenseRepository expenseRepository, UserService userService, ExpenseMapper expenseMapper, CategoryService categoryService, ExpenseStatisticsMapper expenseStatisticsMapper) {
         this.expenseRepository = expenseRepository;
         this.userService = userService;
         this.expenseMapper = expenseMapper;
         this.categoryService = categoryService;
+        this.expenseStatisticsMapper = expenseStatisticsMapper;
     }
 
     public Page<ExpenseDTO> getExpensesByDate(LocalDate startDate, LocalDate endDate, Long userId, Pageable pageable) {
@@ -45,6 +48,26 @@ public class ExpenseService {
         return expenseRepository.findByUserAndDateBetweenAndCategory(user, startDate, endDate, category, pageable)
                 .map(expenseMapper::toDTO);
 
+    }
+
+    public ExpenseStatisticsDTO getExpenseStatisticsByDateAndCategory(LocalDate startDate, LocalDate endDate, Optional<Long> categoryId, Long userId) {
+        User user = userService.getUserById(userId);
+        Optional<Category> category = categoryId.map(id -> categoryService.getCategoryByIdAndUser(id, userId));
+
+        ExpenseStatistics expenseStatisticsByCategory = expenseRepository.findExpenseStatisticsByUserAndDateBetweenAndCategory(user, startDate, endDate, category.orElse(null))
+                .orElse(new ExpenseStatistics(0.0,0.0,0.0,0.0,null));
+
+        ExpenseStatistics allExpenseStatistics = expenseRepository.findExpenseStatisticsByUserAndDateBetweenAndCategory(user, startDate, endDate, null)
+                .orElse(new ExpenseStatistics(0.0,0.0,0.0,0.0,null));
+
+
+        System.out.println(expenseStatisticsByCategory.getTotalExpense());
+        System.out.println(allExpenseStatistics.getTotalExpense());
+
+        Double categoryPercentage = !allExpenseStatistics.getTotalExpense().equals(0.0) ? expenseStatisticsByCategory.getTotalExpense() / allExpenseStatistics.getTotalExpense() : 0.0;
+        expenseStatisticsByCategory.setCategoryPercentage(categoryPercentage);
+
+        return expenseStatisticsMapper.toDTO(expenseStatisticsByCategory);
     }
 
     public ExpenseDTO addExpense(ExpenseDTO expenseDTO, Long userId) {

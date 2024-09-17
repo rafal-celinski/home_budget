@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.rafalcelinski.home_budget.dto.ExpenseDTO;
+import pl.rafalcelinski.home_budget.dto.ExpenseStatisticsDTO;
 import pl.rafalcelinski.home_budget.dto.TokenDTO;
 import pl.rafalcelinski.home_budget.dto.validation.groups.OnCreate;
 import pl.rafalcelinski.home_budget.dto.validation.groups.OnUpdate;
@@ -90,5 +91,23 @@ public class ExpenseController {
         Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
         ExpenseDTO newExpenseDTO = expenseService.updateExpenseById(id, expenseDTO, userId);
         return ResponseEntity.ok(newExpenseDTO);
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<?> getExpenseStats(@RequestParam(value = "startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> endDate,
+                                             @RequestParam(value = "categoryId", required = false) Optional<Long> categoryId,
+                                             @RequestHeader("Authorization") String authorizationHeader) {
+
+        Long userId = validAuthorizationAndExtractUserID(authorizationHeader);
+
+        LocalDate finalEndDate = endDate.orElse(LocalDate.now());
+        if (startDate.isAfter(finalEndDate)) {
+            throw new InvalidDateRangeException("Start date cannot be after end date");
+        }
+
+        ExpenseStatisticsDTO expenseStatisticsDTO = expenseService.getExpenseStatisticsByDateAndCategory(startDate, finalEndDate, categoryId, userId);
+
+        return ResponseEntity.ok(expenseStatisticsDTO);
     }
 }
