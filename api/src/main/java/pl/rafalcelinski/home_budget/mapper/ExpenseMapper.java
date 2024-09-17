@@ -13,11 +13,10 @@ import java.time.LocalDate;
 
 @Component
 public class ExpenseMapper {
-    private final CategoryService categoryService;
+
     private final CategoryRepository categoryRepository;
 
-    public ExpenseMapper(CategoryService categoryService, CategoryRepository categoryRepository) {
-        this.categoryService = categoryService;
+    public ExpenseMapper(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
     }
 

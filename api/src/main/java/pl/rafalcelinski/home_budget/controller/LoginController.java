@@ -7,22 +7,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.rafalcelinski.home_budget.dto.TokenDTO;
 import pl.rafalcelinski.home_budget.dto.LoginDTO;
-import pl.rafalcelinski.home_budget.service.AuthService;
+import pl.rafalcelinski.home_budget.service.AuthorizationService;
 
 
 @RestController
 @RequestMapping("/login")
 public class LoginController {
 
-    private final AuthService authService;
+    private final AuthorizationService authorizationService;
 
-    LoginController(AuthService authService) {
-        this.authService = authService;
+    LoginController(AuthorizationService authorizationService) {
+        this.authorizationService = authorizationService;
     }
 
     @PostMapping
     public ResponseEntity<?> login(@RequestBody LoginDTO loginDTO) {
-        TokenDTO tokenDTO = authService.login(loginDTO);
+        TokenDTO tokenDTO = authorizationService.authenticate(loginDTO);
         return ResponseEntity.ok(tokenDTO);
     }
 }

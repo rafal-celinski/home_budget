@@ -11,7 +11,7 @@ import pl.rafalcelinski.home_budget.dto.LoginDTO;
 import pl.rafalcelinski.home_budget.dto.TokenDTO;
 import pl.rafalcelinski.home_budget.exception.InvalidCredentialsException;
 import pl.rafalcelinski.home_budget.exception.UserNotFoundException;
-import pl.rafalcelinski.home_budget.service.AuthService;
+import pl.rafalcelinski.home_budget.service.AuthorizationService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -24,13 +24,13 @@ public class LoginControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @MockBean
-    private AuthService authService;
+    private AuthorizationService authorizationService;
     @Autowired
     private ObjectMapper objectMapper;
 
     @Test
     public void loginEndpoint_shouldReturnToken_whenCredentialsAreValid() throws Exception {
-        when(authService.login(any(LoginDTO.class))).thenReturn(new TokenDTO("dummy-token"));
+        when(authorizationService.authenticate(any(LoginDTO.class))).thenReturn(new TokenDTO("dummy-token"));
 
         LoginDTO loginDTO = new LoginDTO("test@email.com", "password_hash");
 
@@ -43,7 +43,7 @@ public class LoginControllerTest {
 
     @Test
     public void loginEndpoint_shouldReturnUnauthorised_whenUserNotFound() throws Exception {
-        when(authService.login(any(LoginDTO.class))).thenThrow(new UserNotFoundException());
+        when(authorizationService.authenticate(any(LoginDTO.class))).thenThrow(new UserNotFoundException());
 
         LoginDTO loginDTO = new LoginDTO("test@email.com", "password_hash");
 
@@ -55,7 +55,7 @@ public class LoginControllerTest {
 
     @Test
     public void loginEndpoint_shouldReturnUnauthorised_whenCredentialsAreInvalid() throws Exception {
-        when(authService.login(any(LoginDTO.class))).thenThrow(new InvalidCredentialsException());
+        when(authorizationService.authenticate(any(LoginDTO.class))).thenThrow(new InvalidCredentialsException());
 
         LoginDTO loginDTO = new LoginDTO("test@email.com", "password_hash");
 

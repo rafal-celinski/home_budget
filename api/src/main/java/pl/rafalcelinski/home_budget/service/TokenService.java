@@ -1,51 +1,51 @@
 package pl.rafalcelinski.home_budget.service;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pl.rafalcelinski.home_budget.dto.TokenDTO;
-import pl.rafalcelinski.home_budget.repository.UserRepository;
+import pl.rafalcelinski.home_budget.exception.InvalidTokenException;
 
 @Service
 public class TokenService {
+    private final String secretKey;
 
-    private final UserRepository userRepository;
-
-    TokenService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public TokenService(@Value("${jwt.secretKey}") String secretKey) {
+        this.secretKey = secretKey;
     }
-
-    private final String SECRET_KEY = "secret"; // TODO: make this more secure :>
 
     public TokenDTO generateToken(Long userId) {
         String token = Jwts.builder()
                 .setSubject(userId.toString())
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
 
         return new TokenDTO(token);
     }
 
     public Long extractUserId(TokenDTO tokenDTO) {
+        String token = tokenDTO.getToken();
         return Long.parseLong(Jwts.parser()
-                .setSigningKey(SECRET_KEY)
-                .parseClaimsJws(tokenDTO.getToken())
+                .setSigningKey(secretKey)
+                .parseClaimsJws(token)
                 .getBody()
                 .getSubject());
     }
 
-    public boolean isTokenValid(TokenDTO tokenDTO) {
+    public void validateToken(TokenDTO tokenDTO) {
         try {
-            Long userId = extractUserId(tokenDTO);
-            return userRepository.existsById(userId);
+            String token = tokenDTO.getToken();
+            Jwts.parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(token);
+        } catch (ExpiredJwtException e) {
+            throw new InvalidTokenException("Token expired");
+        } catch (SignatureException e) {
+            throw new InvalidTokenException("Invalid token signature");
+        } catch (MalformedJwtException e) {
+            throw new InvalidTokenException("Invalid token format");
+        } catch (Exception e) {
+            throw new InvalidTokenException("Invalid token");
         }
-        catch (Exception e) {
-            return false;
-        }
-    }
-
-    public TokenDTO authorizationHeaderToTokenDTO(String authorizationHeader) {
-        String token = authorizationHeader.substring(7);
-        return new TokenDTO(token);
     }
 }

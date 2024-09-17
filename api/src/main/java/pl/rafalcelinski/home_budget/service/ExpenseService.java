@@ -34,20 +34,12 @@ public class ExpenseService {
         this.expenseStatisticsMapper = expenseStatisticsMapper;
     }
 
-    public Page<ExpenseDTO> getExpensesByDate(LocalDate startDate, LocalDate endDate, Long userId, Pageable pageable) {
+    public Page<ExpenseDTO> getExpensesByDateAndCategoryId(LocalDate startDate, LocalDate endDate, Optional<Long> categoryId, Long userId, Pageable pageable) {
         User user = userService.getUserById(userId);
+        Optional<Category> category = categoryId.map(id -> categoryService.getCategoryByIdAndUser(id, userId));
 
-        return expenseRepository.findByUserAndDateBetween(user, startDate, endDate, pageable)
+        return expenseRepository.findByUserAndDateBetweenAndCategory(user, startDate, endDate, category.orElse(null), pageable)
                 .map(expenseMapper::toDTO);
-    }
-
-    public Page<ExpenseDTO> getExpensesByDateAndCategoryId(LocalDate startDate, LocalDate endDate, Long categoryId, Long userId, Pageable pageable) {
-        User user = userService.getUserById(userId);
-        Category category = categoryService.getCategoryByIdAndUser(categoryId, userId);
-
-        return expenseRepository.findByUserAndDateBetweenAndCategory(user, startDate, endDate, category, pageable)
-                .map(expenseMapper::toDTO);
-
     }
 
     public ExpenseStatisticsDTO getExpenseStatisticsByDateAndCategory(LocalDate startDate, LocalDate endDate, Optional<Long> categoryId, Long userId) {
