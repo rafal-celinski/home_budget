@@ -51,11 +51,7 @@ public class ExpenseService {
 
         ExpenseStatistics allExpenseStatistics = expenseRepository.findExpenseStatisticsByUserAndDateBetweenAndCategory(user, startDate, endDate, null)
                 .orElse(new ExpenseStatistics(0.0,0.0,0.0,0.0,null));
-
-
-        System.out.println(expenseStatisticsByCategory.getTotalExpense());
-        System.out.println(allExpenseStatistics.getTotalExpense());
-
+        
         Double categoryPercentage = !allExpenseStatistics.getTotalExpense().equals(0.0) ? expenseStatisticsByCategory.getTotalExpense() / allExpenseStatistics.getTotalExpense() : 0.0;
         expenseStatisticsByCategory.setCategoryPercentage(categoryPercentage);
 
